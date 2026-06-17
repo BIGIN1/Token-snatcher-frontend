@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { TOKEN_CONFIG, TOKEN_RADIUS, SPAWN_INTERVAL_MS, RANKED_DURATION_SECONDS, FREE_DURATION_SECONDS, INITIAL_SPAWN_DELAY_MS, MAX_TOKENS_ON_SCREEN, DIFFICULTY_INTERVAL_SECONDS, DIFFICULTY_SPAWN_REDUCTION, MIN_SPAWN_INTERVAL_MS, GAME_WIDTH, GAME_HEIGHT } from '@/utils/constants';
+import { TOKEN_CONFIG, TOKEN_RADIUS, SPAWN_INTERVAL_MS, RANKED_DURATION_SECONDS, INITIAL_SPAWN_DELAY_MS, MAX_TOKENS_ON_SCREEN, DIFFICULTY_INTERVAL_SECONDS, DIFFICULTY_SPAWN_REDUCTION, MIN_SPAWN_INTERVAL_MS, GAME_WIDTH, GAME_HEIGHT } from '@/utils/constants';
 import { createScoreState, addScore, resetScore, ScoreState } from '@/utils/scoring';
 import { generateGridSpawnPoints, pickRandomTokenType, selectSpawnPositions, positionKey, SpawnPoint } from '@/utils/spawnLogic';
 
@@ -165,7 +165,7 @@ export class GameScene extends Phaser.Scene {
       Phaser.Geom.Circle.Contains,
     );
 
-    container.on('pointerdown', () => this.snatchToken(container, config.points));
+    container.on('pointerdown', () => this.snatchToken(container, config.points, config.color));
     container.on('pointerover', () => {
       circle.setScale(1.15);
       inner.setScale(1.15);
@@ -182,11 +182,13 @@ export class GameScene extends Phaser.Scene {
     this.tokens.push(container);
 
     this.time.delayedCall(config.lifetimeMs, () => {
-      this.removeToken(container);
+      if (container.active) {
+        this.removeToken(container);
+      }
     });
   }
 
-  private snatchToken(container: Phaser.GameObjects.Container, basePoints: number): void {
+  private snatchToken(container: Phaser.GameObjects.Container, basePoints: number, color: number): void {
     if (this.isGameOver) return;
 
     const now = Date.now();
@@ -196,10 +198,15 @@ export class GameScene extends Phaser.Scene {
 
     this.onScoreUpdate?.(this.scoreState.score, this.scoreState.combo);
 
+    this.playHitFeedback(container.x, container.y, color, basePoints);
     this.removeToken(container);
   }
 
   private removeToken(container: Phaser.GameObjects.Container): void {
+    if (!container.active) {
+      return;
+    }
+
     const key = positionKey(container.x, container.y);
     this.occupiedPositions.delete(key);
 
@@ -209,6 +216,36 @@ export class GameScene extends Phaser.Scene {
     }
 
     container.destroy();
+  }
+
+  private playHitFeedback(x: number, y: number, color: number, points: number): void {
+    const burst = this.add.container(x, y);
+    burst.setDepth(20);
+
+    const outerRing = this.add.circle(0, 0, TOKEN_RADIUS * 0.7, color, 0.18);
+    outerRing.setStrokeStyle(3, 0xffffff, 0.9);
+
+    const innerGlow = this.add.circle(0, 0, TOKEN_RADIUS * 0.28, 0xffffff, 0.5);
+
+    const pointsLabel = this.add.text(0, -TOKEN_RADIUS * 0.95, `+${points}`, {
+      fontSize: '18px',
+      color: '#ffffff',
+      fontFamily: 'monospace',
+      fontStyle: 'bold',
+    }).setOrigin(0.5, 0.5);
+
+    burst.add([outerRing, innerGlow, pointsLabel]);
+
+    this.tweens.add({
+      targets: burst,
+      scale: { from: 0.75, to: 1.5 },
+      alpha: { from: 1, to: 0 },
+      duration: 420,
+      ease: 'Quad.easeOut',
+      onComplete: () => burst.destroy(),
+    });
+
+    this.cameras.main.flash(45, 255, 255, 255, false);
   }
 
   private updateUI(): void {
