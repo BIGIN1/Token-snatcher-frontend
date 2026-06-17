@@ -165,7 +165,7 @@ export class GameScene extends Phaser.Scene {
       Phaser.Geom.Circle.Contains,
     );
 
-    container.on('pointerdown', () => this.snatchToken(container, config.points));
+    container.on('pointerdown', () => this.snatchToken(container, config.points, config.color));
     container.on('pointerover', () => {
       circle.setScale(1.15);
       inner.setScale(1.15);
@@ -186,17 +186,44 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private snatchToken(container: Phaser.GameObjects.Container, basePoints: number): void {
+  private snatchToken(container: Phaser.GameObjects.Container, basePoints: number, color: number): void {
     if (this.isGameOver) return;
 
     const now = Date.now();
-    this.scoreState = addScore(this.scoreState, basePoints, now);
+    const { state, earnedPoints } = addScore(this.scoreState, basePoints, now);
+    this.scoreState = state;
 
     this.updateUI();
+
+    this.showScorePopup(container.x, container.y, earnedPoints, color);
 
     this.onScoreUpdate?.(this.scoreState.score, this.scoreState.combo);
 
     this.removeToken(container);
+  }
+
+  private showScorePopup(x: number, y: number, points: number, color: number): void {
+    const colorStr = '#' + color.toString(16).padStart(6, '0');
+    const popup = this.add.text(x, y, `+${points}`, {
+      fontSize: '22px',
+      color: colorStr,
+      fontFamily: 'monospace',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5, 0.5).setDepth(1000);
+
+    popup.setScale(0.5);
+
+    this.tweens.add({
+      targets: popup,
+      y: y - 50,
+      alpha: 0,
+      scale: 1,
+      duration: 700,
+      ease: 'Power2',
+      onComplete: () => popup.destroy(),
+    });
   }
 
   private removeToken(container: Phaser.GameObjects.Container): void {
