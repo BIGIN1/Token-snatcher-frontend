@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import WalletButton from "@/components/WalletButton";
-import Link from "next/link";
+import { WalletProvider } from "../context/WalletContext";
 
 export const metadata: Metadata = {
   title: "Token Snatcher",
   description: "A decentralized arcade game - snatch tokens and earn on-chain rewards!",
 };
-
-import { WalletProvider } from "../context/WalletContext";
 
 export default function RootLayout({
   children,
@@ -17,9 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         <WalletProvider>
           {children}
         </WalletProvider>

@@ -8,15 +8,19 @@ interface WalletContextProps {
   isConnected: boolean;
   connect: () => Promise<void>;
   disconnect: () => void;
+  error: string | null;
+  isLoading: boolean;
 }
 
 const WalletContext = createContext<WalletContextProps | undefined>(undefined);
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check local storage on mount to see if user was previously connected
+    // Restore cached wallet address on mount
     const cachedAddress = WalletService.getCachedAddress();
     if (cachedAddress) {
       setAddress(cachedAddress);
@@ -24,20 +28,40 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const connect = async () => {
-    const pubKey = await WalletService.connectWallet();
-    if (pubKey) {
-      setAddress(pubKey);
-      WalletService.cacheAddress(pubKey);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const pubKey = await WalletService.connectWallet();
+      if (pubKey) {
+        setAddress(pubKey);
+        WalletService.cacheAddress(pubKey);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet";
+      setError(errorMessage);
+      console.error("Connection error:", errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const disconnect = () => {
     setAddress(null);
+    setError(null);
     WalletService.disconnectWallet();
   };
 
   return (
-    <WalletContext.Provider value={{ address, isConnected: !!address, connect, disconnect }}>
+    <WalletContext.Provider 
+      value={{ 
+        address, 
+        isConnected: !!address, 
+        connect, 
+        disconnect,
+        error,
+        isLoading
+      }}
+    >
       {children}
     </WalletContext.Provider>
   );
