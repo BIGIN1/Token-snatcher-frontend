@@ -1,8 +1,8 @@
-# TODO - Golden Token Mechanic
+# Token-snatcher-frontend TODO
 
-- [ ] Add a new rare `golden` token type with distinct color, spawn weight, lifetime, and bonus constants.
-- [ ] Update spawn logic to include `golden` in random selection.
-- [ ] Update Phaser `GameScene` to render golden tokens with distinct visuals (sparkle ring / outline / label) and apply bonus score on snatch.
-- [ ] Add a small in-game “GOLDEN!” / “+bonus” overlay/label when a golden token is snatched.
-- [ ] Run `npm run dev` and manually verify: golden tokens spawn occasionally, score bonus applies, visuals are distinct.
+- [ ] Plan and implement a real Phaser BootScene asset preloader with visible progress
+- [ ] Ensure BootScene is the first scene and auto-transitions to GameScene after preload completes
+- [ ] Load at least required assets (token visuals/fonts if any) and remove the manual “Press SPACE” gate
+- [ ] Verify mode/config is passed through correctly to GameScene
+- [ ] Run frontend dev build (npm test/dev) and do quick smoke check in browser
 
