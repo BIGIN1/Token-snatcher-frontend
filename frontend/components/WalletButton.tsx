@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useWallet } from "../context/WalletContext";
 
 export const WalletButton = () => {
@@ -19,12 +19,40 @@ export const WalletButton = () => {
     return `${addr.substring(0, 5)}...${addr.substring(addr.length - 4)}`;
   };
 
+  const statusConfig = useMemo(() => {
+    if (isLoading) {
+      return {
+        label: "Connecting...",
+        dotClass: "bg-yellow-500 animate-pulse",
+        ringClass: "ring-yellow-200 dark:ring-yellow-900/50",
+      };
+    }
+    if (isConnected) {
+      return {
+        label: "Connected",
+        dotClass: "bg-green-500",
+        ringClass: "ring-green-200 dark:ring-green-900/50",
+      };
+    }
+    return {
+      label: "Disconnected",
+      dotClass: "bg-red-500",
+      ringClass: "ring-red-200 dark:ring-red-900/50",
+    };
+  }, [isConnected, isLoading]);
+
   if (isConnected && address) {
     return (
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-4 p-2 bg-gray-100 dark:bg-zinc-800 rounded-full border border-gray-200 dark:border-zinc-700">
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 ring-2 ${statusConfig.ringClass}`}>
+            <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`}></span>
+            {statusConfig.label}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 p-2 bg-gray-100 dark:bg-zinc-800 rounded-full border border-gray-200 dark:border-zinc-700">
           <div className="flex items-center gap-2 pl-2">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`}></span>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono">
               {formatAddress(address)}
             </span>
@@ -42,6 +70,12 @@ export const WalletButton = () => {
 
   return (
     <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 ring-2 ${statusConfig.ringClass}`}>
+          <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`}></span>
+          {statusConfig.label}
+        </span>
+      </div>
       <button
         onClick={handleConnect}
         disabled={isLoading}

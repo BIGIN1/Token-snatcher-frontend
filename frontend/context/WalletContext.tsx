@@ -6,6 +6,7 @@ import { WalletService } from "../services/wallet.service";
 interface WalletContextProps {
   address: string | null;
   isConnected: boolean;
+  connectionStatus: "loading" | "connected" | "disconnected";
   connect: () => Promise<void>;
   disconnect: () => void;
   error: string | null;
@@ -55,7 +56,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     <WalletContext.Provider 
       value={{ 
         address, 
-        isConnected: !!address, 
+        isConnected: !!address,
+        connectionStatus: isLoading ? "loading" : (!!address ? "connected" : "disconnected"),
         connect, 
         disconnect,
         error,
