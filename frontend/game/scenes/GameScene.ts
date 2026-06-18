@@ -18,6 +18,9 @@ interface GameConfig {
   seed?: number;
   onScoreUpdate?: (score: number, combo: number) => void;
   onGameOver?: (finalScore: number) => void;
+  onClickSound?: () => void;
+  onSuccessSound?: () => void;
+  onErrorSound?: () => void;
 }
 
 export class GameScene extends Phaser.Scene {
@@ -30,6 +33,9 @@ export class GameScene extends Phaser.Scene {
   private seed?: number;
   private onScoreUpdate?: (score: number, combo: number) => void;
   private onGameOver?: (finalScore: number) => void;
+  private onClickSound?: () => void;
+  private onSuccessSound?: () => void;
+  private onErrorSound?: () => void;
   private isGameOver = false;
   private scoreText!: Phaser.GameObjects.Text;
   private comboText!: Phaser.GameObjects.Text;
@@ -46,6 +52,9 @@ export class GameScene extends Phaser.Scene {
     this.seed = data.seed;
     this.onScoreUpdate = data.onScoreUpdate;
     this.onGameOver = data.onGameOver;
+    this.onClickSound = data.onClickSound;
+    this.onSuccessSound = data.onSuccessSound;
+    this.onErrorSound = data.onErrorSound;
   }
 
   create(): void {
@@ -164,12 +173,14 @@ export class GameScene extends Phaser.Scene {
   private snatchToken(container: Phaser.GameObjects.Container, basePoints: number, isGolden = false): void {
     if (this.isGameOver) return;
 
-    const now = Date.now();
-    const awardedPoints = isGolden
-      ? Math.round((basePoints + GOLDEN_TOKEN_BONUS_POINTS) * GOLDEN_TOKEN_MULTIPLIER)
-      : basePoints;
+    if (isGolden) {
+      this.onSuccessSound?.();
+    } else {
+      this.onClickSound?.();
+    }
 
-    this.scoreState = addScore(this.scoreState, awardedPoints, now);
+    const now = Date.now();
+    this.scoreState = addScore(this.scoreState, basePoints, now).state;
     this.updateUI();
     this.onScoreUpdate?.(this.scoreState.score, this.scoreState.combo);
 
@@ -185,7 +196,19 @@ export class GameScene extends Phaser.Scene {
       onComplete: () => container.destroy(),
     });
 
-    if (isGolden) this.showGoldenLabel(container.x, container.y);
+    const awardedBasePoints = isGolden
+      ? Math.round((basePoints + GOLDEN_TOKEN_BONUS_POINTS) * GOLDEN_TOKEN_MULTIPLIER)
+      : basePoints;
+
+    this.scoreState = addScore(this.scoreState, awardedBasePoints, now).state;
+    this.updateUI();
+
+    if (isGolden) {
+      this.showGoldenLabel(container.x, container.y);
+    }
+
+    this.onScoreUpdate?.(this.scoreState.score, this.scoreState.combo);
+    this.removeToken(container);
   }
 
   private removeToken(container: Phaser.GameObjects.Container): void {
@@ -222,8 +245,15 @@ export class GameScene extends Phaser.Scene {
   private endGame(): void {
     if (this.isGameOver) return;
     this.isGameOver = true;
-    this.spawnEngine.stop();
-    for (const token of [...this.tokens]) this.removeToken(token);
+
+    this.onErrorSound?.();
+
+    if (this.spawnTimer) this.spawnTimer.destroy();
+
+    for (const token of [...this.tokens]) {
+      this.removeToken(token);
+    }
+
     this.onGameOver?.(this.scoreState.score);
     this.scene.start('ResultScene', { score: this.scoreState.score, mode: this.mode });
   }
