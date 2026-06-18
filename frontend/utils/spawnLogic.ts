@@ -35,10 +35,11 @@ export function pickRandomTokenType(): TokenType {
   const rand = Math.random() * 100;
   let cumulative = 0;
 
-  for (const type of ['blue', 'gold', 'red'] as TokenType[]) {
+  for (const type of ['blue', 'gold', 'red', 'golden'] as TokenType[]) {
     cumulative += TOKEN_CONFIG[type].spawnWeight;
     if (rand <= cumulative) return type;
   }
+
 
   return 'blue';
 }
