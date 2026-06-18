@@ -37,6 +37,7 @@ export class GameScene extends Phaser.Scene {
   private onSuccessSound?: () => void;
   private onErrorSound?: () => void;
   private isGameOver = false;
+  private sessionStartTime = 0;
   private scoreText!: Phaser.GameObjects.Text;
   private comboText!: Phaser.GameObjects.Text;
   private timerText!: Phaser.GameObjects.Text;
@@ -59,6 +60,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.resetState();
+    this.sessionStartTime = Date.now();
 
     this.background = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x0f172a).setOrigin(0, 0);
 
@@ -267,7 +269,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.onGameOver?.(this.scoreState.score);
-    this.scene.start('ResultScene', { score: this.scoreState.score, mode: this.mode });
+    const duration = Math.round((Date.now() - this.sessionStartTime) / 1000);
+    this.scene.start('ResultScene', { score: this.scoreState.score, duration, mode: this.mode });
   }
 
   handleEndGame(): void { this.endGame(); }
