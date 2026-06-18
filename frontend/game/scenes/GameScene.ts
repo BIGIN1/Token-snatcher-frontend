@@ -23,6 +23,9 @@ interface GameConfig {
   mode: 'ranked' | 'free';
   onScoreUpdate?: (score: number, combo: number) => void;
   onGameOver?: (finalScore: number) => void;
+  onClickSound?: () => void;
+  onSuccessSound?: () => void;
+  onErrorSound?: () => void;
 }
 
 export class GameScene extends Phaser.Scene {
@@ -38,6 +41,9 @@ export class GameScene extends Phaser.Scene {
   private mode: 'ranked' | 'free' = 'free';
   private onScoreUpdate?: (score: number, combo: number) => void;
   private onGameOver?: (finalScore: number) => void;
+  private onClickSound?: () => void;
+  private onSuccessSound?: () => void;
+  private onErrorSound?: () => void;
   private isGameOver = false;
   private scoreText!: Phaser.GameObjects.Text;
   private comboText!: Phaser.GameObjects.Text;
@@ -54,6 +60,9 @@ export class GameScene extends Phaser.Scene {
     this.mode = data.mode ?? 'free';
     this.onScoreUpdate = data.onScoreUpdate;
     this.onGameOver = data.onGameOver;
+    this.onClickSound = data.onClickSound;
+    this.onSuccessSound = data.onSuccessSound;
+    this.onErrorSound = data.onErrorSound;
   }
 
   create(): void {
@@ -258,8 +267,14 @@ export class GameScene extends Phaser.Scene {
   ): void {
     if (this.isGameOver) return;
 
+    if (isGolden) {
+      this.onSuccessSound?.();
+    } else {
+      this.onClickSound?.();
+    }
+
     const now = Date.now();
-    this.scoreState = addScore(this.scoreState, basePoints, now);
+    this.scoreState = addScore(this.scoreState, basePoints, now).state;
     this.updateUI();
     this.onScoreUpdate?.(this.scoreState.score, this.scoreState.combo);
 
@@ -285,7 +300,7 @@ export class GameScene extends Phaser.Scene {
       ? Math.round((basePoints + GOLDEN_TOKEN_BONUS_POINTS) * GOLDEN_TOKEN_MULTIPLIER)
       : basePoints;
 
-    this.scoreState = addScore(this.scoreState, awardedBasePoints, now);
+    this.scoreState = addScore(this.scoreState, awardedBasePoints, now).state;
     this.updateUI();
 
     if (isGolden) {
@@ -352,6 +367,8 @@ export class GameScene extends Phaser.Scene {
   private endGame(): void {
     if (this.isGameOver) return;
     this.isGameOver = true;
+
+    this.onErrorSound?.();
 
     if (this.spawnTimer) this.spawnTimer.destroy();
 

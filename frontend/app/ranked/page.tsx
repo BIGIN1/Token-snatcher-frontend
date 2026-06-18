@@ -5,11 +5,13 @@ import dynamic from 'next/dynamic';
 import ScoreBoard from '@/components/ScoreBoard';
 import MusicControls from '@/components/MusicControls';
 import { useMusicPlayer } from '@/hooks/useMusicPlayer';
+import { useAudio } from '@/hooks/useAudio';
 
 const GameCanvas = dynamic(() => import('@/components/GameCanvas'), { ssr: false });
 
 export default function RankedPage() {
   const { muted, volume, toggleMute, setVolume } = useMusicPlayer('/audio/gameplay.mp3');
+  const { sfxMuted, playClick, playSuccess, playError, toggleSfxMute } = useAudio();
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [gameKey, setGameKey] = useState(0);
@@ -44,7 +46,7 @@ export default function RankedPage() {
           </div>
           <div className="flex items-center gap-4">
             <ScoreBoard score={score} combo={combo} />
-            <MusicControls muted={muted} volume={volume} onToggleMute={toggleMute} onVolumeChange={setVolume} />
+            <MusicControls muted={muted} volume={volume} onToggleMute={toggleMute} onVolumeChange={setVolume} sfxMuted={sfxMuted} onToggleSfx={toggleSfxMute} />
           </div>
         </div>
 
@@ -77,6 +79,9 @@ export default function RankedPage() {
             mode="ranked"
             onScoreUpdate={handleScoreUpdate}
             onGameOver={handleGameOver}
+            onClickSound={playClick}
+            onSuccessSound={playSuccess}
+            onErrorSound={playError}
           />
         )}
       </div>

@@ -5,9 +5,18 @@ interface MusicControlsProps {
   volume: number;
   onToggleMute: () => void;
   onVolumeChange: (val: number) => void;
+  sfxMuted: boolean;
+  onToggleSfx: () => void;
 }
 
-export default function MusicControls({ muted, volume, onToggleMute, onVolumeChange }: MusicControlsProps) {
+export default function MusicControls({
+  muted,
+  volume,
+  onToggleMute,
+  onVolumeChange,
+  sfxMuted,
+  onToggleSfx,
+}: MusicControlsProps) {
   return (
     <div className="flex items-center gap-3 bg-[#1e293b] border border-[#334155] rounded-xl px-4 py-2">
       <button
@@ -30,6 +39,15 @@ export default function MusicControls({ muted, volume, onToggleMute, onVolumeCha
       <span className="text-xs text-[#64748b] font-mono w-8">
         {muted ? '0%' : `${Math.round(volume * 100)}%`}
       </span>
+      <div className="w-px h-5 bg-[#334155]" />
+      <button
+        onClick={onToggleSfx}
+        aria-label={sfxMuted ? 'Unmute SFX' : 'Mute SFX'}
+        title={sfxMuted ? 'SFX off' : 'SFX on'}
+        className="text-lg hover:scale-110 transition-transform"
+      >
+        {sfxMuted ? '🔕' : '🔔'}
+      </button>
     </div>
   );
 }
