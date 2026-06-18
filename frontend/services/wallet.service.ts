@@ -30,10 +30,16 @@ export class WalletService {
         throw new Error("Freighter wallet is not installed. Please install it to continue.");
       }
 
-      await requestAccess();
-      const address = await getAddress();
+      const result = await requestAccess();
+      if (result.error) {
+        throw new Error(result.error.message || "Wallet access denied.");
+      }
 
-      if (!address || typeof address !== "string") {
+      const { address, error } = await getAddress();
+      if (error) {
+        throw new Error(error.message || "Failed to retrieve wallet address.");
+      }
+      if (!address) {
         throw new Error("Failed to retrieve wallet address.");
       }
 

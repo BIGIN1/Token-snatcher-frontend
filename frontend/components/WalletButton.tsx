@@ -1,19 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useWallet } from "../context/WalletContext";
 
 export const WalletButton = () => {
   const { address, isConnected, connect, disconnect, error, isLoading } = useWallet();
-  const [showError, setShowError] = useState(false);
-
-  const handleConnect = async () => {
-    setShowError(false);
-    await connect();
-    if (error) {
-      setShowError(true);
-    }
-  };
 
   const formatAddress = (addr: string) => {
     return `${addr.substring(0, 5)}...${addr.substring(addr.length - 4)}`;
@@ -43,13 +34,13 @@ export const WalletButton = () => {
   return (
     <div className="flex flex-col gap-2">
       <button
-        onClick={handleConnect}
+        onClick={connect}
         disabled={isLoading}
         className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-full shadow-sm transition-colors"
       >
         {isLoading ? "Connecting..." : "Connect Wallet"}
       </button>
-      {showError && error && (
+      {error && (
         <div className="px-4 py-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg">
           {error}
         </div>
