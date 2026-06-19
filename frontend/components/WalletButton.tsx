@@ -1,44 +1,97 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useWallet } from "../context/WalletContext";
 
 export const WalletButton = () => {
-  const { address, isConnected, connect, disconnect } = useWallet();
-
-  const handleConnect = async () => {
-    await connect();
-  };
+  const { address, isConnected, connect, disconnect, error, isLoading } = useWallet();
 
   const formatAddress = (addr: string) => {
-    return `${addr.substring(0, 5)}...${addr.substring(addr.length - 4)}`;
+    return `${addr.substring(0, 4)}...${addr.substring(addr.length - 4)}`;
   };
+
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const statusConfig = useMemo(() => {
+    if (isLoading) {
+      return {
+        label: "Connecting...",
+        dotClass: "bg-yellow-500 animate-pulse",
+        ringClass: "ring-yellow-200 dark:ring-yellow-900/50",
+      };
+    }
+    if (isConnected) {
+      return {
+        label: "Connected",
+        dotClass: "bg-green-500",
+        ringClass: "ring-green-200 dark:ring-green-900/50",
+      };
+    }
+    return {
+      label: "Disconnected",
+      dotClass: "bg-red-500",
+      ringClass: "ring-red-200 dark:ring-red-900/50",
+    };
+  }, [isConnected, isLoading]);
 
   if (isConnected && address) {
     return (
-      <div className="flex items-center gap-4 p-2 bg-gray-100 dark:bg-zinc-800 rounded-full border border-gray-200 dark:border-zinc-700">
-        <div className="flex items-center gap-2 pl-2">
-          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono">
-            {formatAddress(address)}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 ring-2 ${statusConfig.ringClass}`}>
+            <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`}></span>
+            {statusConfig.label}
           </span>
         </div>
-        <button
-          onClick={disconnect}
-          className="px-4 py-1.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-full transition-colors"
-        >
-          Disconnect
-        </button>
+        <div className="flex items-center gap-3 p-2 bg-gray-100 dark:bg-zinc-800 rounded-full border border-gray-200 dark:border-zinc-700">
+          <div className="flex items-center gap-2 pl-2 relative">
+            <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`}></span>
+            <span
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono cursor-pointer"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
+              {formatAddress(address)}
+            </span>
+            {showTooltip && (
+              <div className="absolute top-full left-0 mt-1 px-2 py-1 text-xs bg-gray-900 dark:bg-zinc-950 text-white dark:text-zinc-100 rounded border border-gray-700 dark:border-zinc-700 whitespace-nowrap z-50">
+                {address}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={disconnect}
+            className="px-4 py-1.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-full transition-colors"
+          >
+            Disconnect
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <button
-      onClick={handleConnect}
-      className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-sm transition-colors"
-    >
-      Connect Wallet
-    </button>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 ring-2 ${statusConfig.ringClass}`}>
+          <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`}></span>
+          {statusConfig.label}
+        </span>
+      </div>
+      <button
+        onClick={connect}
+        disabled={isLoading}
+        className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-full shadow-sm transition-colors"
+      >
+        {isLoading ? "Connecting..." : "Connect Wallet"}
+      </button>
+      {error && (
+        <div className="px-4 py-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg">
+          {error}
+        </div>
+      )}
+    </div>
   );
 };
+
+export default WalletButton;

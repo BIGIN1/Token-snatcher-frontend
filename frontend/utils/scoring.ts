@@ -25,15 +25,18 @@ export function calculateMultiplier(combo: number): number {
   return 1 + combo * COMBO_MULTIPLIER_INCREMENT;
 }
 
-export function addScore(state: ScoreState, basePoints: number, now: number): ScoreState {
+export function addScore(state: ScoreState, basePoints: number, now: number): { state: ScoreState; earnedPoints: number } {
   const newCombo = calculateCombo(state, now);
   const multiplier = calculateMultiplier(newCombo);
   const earnedPoints = Math.round(basePoints * multiplier);
 
   return {
-    score: state.score + earnedPoints,
-    combo: newCombo,
-    lastSnatchTime: now,
+    state: {
+      score: state.score + earnedPoints,
+      combo: newCombo,
+      lastSnatchTime: now,
+    },
+    earnedPoints,
   };
 }
 

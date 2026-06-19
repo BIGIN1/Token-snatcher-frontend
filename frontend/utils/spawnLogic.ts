@@ -15,6 +15,17 @@ export interface SpawnPoint {
   y: number;
 }
 
+// --- Seeded PRNG (mulberry32) ---
+export function createSeededRng(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s += 0x6d2b79f5;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
+  };
+}
+
 export function generateGridSpawnPoints(): SpawnPoint[] {
   const points: SpawnPoint[] = [];
   const cellW = (GAME_WIDTH - GRID_PADDING * 2) / GRID_COLS;
@@ -31,11 +42,12 @@ export function generateGridSpawnPoints(): SpawnPoint[] {
   return points;
 }
 
-export function pickRandomTokenType(): TokenType {
-  const rand = Math.random() * 100;
+// rng defaults to Math.random for backwards-compat / free mode
+export function pickRandomTokenType(rng: () => number = Math.random): TokenType {
+  const rand = rng() * 100;
   let cumulative = 0;
 
-  for (const type of ['blue', 'gold', 'red'] as TokenType[]) {
+  for (const type of ['blue', 'gold', 'red', 'golden'] as TokenType[]) {
     cumulative += TOKEN_CONFIG[type].spawnWeight;
     if (rand <= cumulative) return type;
   }
@@ -47,12 +59,13 @@ export function selectSpawnPositions(
   occupiedPositions: Set<string>,
   spawnPoints: SpawnPoint[],
   count: number,
+  rng: () => number = Math.random,
 ): SpawnPoint[] {
   const available = spawnPoints.filter(
     (p) => !occupiedPositions.has(`${p.x},${p.y}`),
   );
 
-  const shuffled = [...available].sort(() => Math.random() - 0.5);
+  const shuffled = [...available].sort(() => rng() - 0.5);
   return shuffled.slice(0, Math.min(count, MAX_TOKENS_ON_SCREEN));
 }
 

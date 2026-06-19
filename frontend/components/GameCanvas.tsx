@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import * as Phaser from 'phaser';
+import { BootScene } from '@/game/scenes/BootScene';
 import { GameScene } from '@/game/scenes/GameScene';
 import { ResultScene } from '@/game/scenes/ResultScene';
 import { GAME_WIDTH, GAME_HEIGHT } from '@/utils/constants';
@@ -10,9 +11,12 @@ interface GameCanvasProps {
   mode: 'ranked' | 'free';
   onScoreUpdate?: (score: number, combo: number) => void;
   onGameOver?: (finalScore: number) => void;
+  onClickSound?: () => void;
+  onSuccessSound?: () => void;
+  onErrorSound?: () => void;
 }
 
-export default function GameCanvas({ mode, onScoreUpdate, onGameOver }: GameCanvasProps) {
+export default function GameCanvas({ mode, onScoreUpdate, onGameOver, onClickSound, onSuccessSound, onErrorSound }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const gameSceneRef = useRef<GameScene | null>(null);
@@ -40,7 +44,7 @@ export default function GameCanvas({ mode, onScoreUpdate, onGameOver }: GameCanv
       height: GAME_HEIGHT,
       parent: containerRef.current,
       backgroundColor: '#0f172a',
-      scene: [GameScene, ResultScene],
+      scene: [BootScene, GameScene, ResultScene],
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -51,10 +55,13 @@ export default function GameCanvas({ mode, onScoreUpdate, onGameOver }: GameCanv
     gameRef.current = phaserGame;
 
     phaserGame.events.on('ready', () => {
-      phaserGame.scene.start('GameScene', {
+      phaserGame.scene.start('BootScene', {
         mode,
         onScoreUpdate: handleScoreUpdate,
         onGameOver: handleGameOver,
+        onClickSound,
+        onSuccessSound,
+        onErrorSound,
       });
     });
 
@@ -62,7 +69,7 @@ export default function GameCanvas({ mode, onScoreUpdate, onGameOver }: GameCanv
       phaserGame.destroy(true);
       gameRef.current = null;
     };
-  }, [mode, handleScoreUpdate, handleGameOver]);
+  }, [mode, handleScoreUpdate, handleGameOver, onClickSound, onSuccessSound, onErrorSound]);
 
   return (
     <div
