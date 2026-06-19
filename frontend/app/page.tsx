@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { WalletButton } from "../components/WalletButton";
 import { useWallet } from "../context/WalletContext";
 
@@ -9,7 +10,8 @@ const formatAddress = (addr: string) => {
 };
 
 export default function Home() {
-  const { isConnected, address } = useWallet();
+  const { isConnected, address, connect, isLoading } = useWallet();
+  const router = useRouter();
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-zinc-50 font-sans dark:bg-black p-8">
@@ -42,17 +44,25 @@ export default function Home() {
               <p className="text-zinc-600 dark:text-zinc-400 mb-8">
                 You are ready to perform blockchain actions and start playing the game.
               </p>
-              <button className="px-8 py-3 w-full bg-black dark:bg-white text-white dark:text-black font-semibold rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors">
-                Start Ranked Game
-              </button>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => router.push('/ranked')}
+                  className="px-8 py-3 w-full bg-black dark:bg-white text-white dark:text-black font-semibold rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+                >
+                  Start Ranked Game
+                </button>
+                <button
+                  onClick={() => router.push('/free')}
+                  className="px-8 py-3 w-full border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  Free Play
+                </button>
+              </div>
             </div>
             {address && (
               <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mb-1">Connected Address</p>
-                <p 
-                  className="text-lg font-mono text-zinc-800 dark:text-zinc-200 cursor-pointer"
-                  title={address}
-                >
+                <p className="text-lg font-mono text-zinc-800 dark:text-zinc-200 cursor-pointer" title={address}>
                   {formatAddress(address)}
                 </p>
               </div>
@@ -63,12 +73,22 @@ export default function Home() {
             <h2 className="text-2xl font-semibold mb-4 text-amber-600 dark:text-amber-500">
               Connection Required
             </h2>
-            <p className="text-zinc-600 dark:text-zinc-400 mb-8">
-              You must reconnect your wallet before performing any blockchain actions.
+            <p className="text-zinc-600 dark:text-zinc-400 mb-6">
+              Connect your Freighter wallet to start playing.
             </p>
-            <div className="opacity-50 cursor-not-allowed">
-              <button disabled className="px-8 py-3 w-full bg-zinc-300 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 font-semibold rounded-full">
-                Start Ranked Game (Disabled)
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={connect}
+                disabled={isLoading}
+                className="px-8 py-3 w-full bg-black dark:bg-white text-white dark:text-black font-semibold rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isLoading ? 'Connecting...' : 'Connect Wallet'}
+              </button>
+              <button
+                onClick={() => router.push('/free')}
+                className="px-8 py-3 w-full border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Try Free Play
               </button>
             </div>
           </div>

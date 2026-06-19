@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useWallet } from "../context/WalletContext";
 
 export const WalletButton = () => {
@@ -9,6 +9,8 @@ export const WalletButton = () => {
   const formatAddress = (addr: string) => {
     return `${addr.substring(0, 4)}...${addr.substring(addr.length - 4)}`;
   };
+
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const statusConfig = useMemo(() => {
     if (isLoading) {
@@ -42,9 +44,13 @@ export const WalletButton = () => {
           </span>
         </div>
         <div className="flex items-center gap-3 p-2 bg-gray-100 dark:bg-zinc-800 rounded-full border border-gray-200 dark:border-zinc-700">
-          <div className="flex items-center gap-2 pl-2">
+          <div className="flex items-center gap-2 pl-2 relative">
             <span className={`w-2 h-2 rounded-full ${statusConfig.dotClass}`}></span>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono">
+            <span
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 font-mono cursor-pointer"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
               {formatAddress(address)}
             </span>
             {showTooltip && (

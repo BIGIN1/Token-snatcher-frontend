@@ -194,7 +194,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     const now = Date.now();
-    this.scoreState = addScore(this.scoreState, basePoints, now).state;
+    const awardedBasePoints = isGolden
+      ? Math.round((basePoints + GOLDEN_TOKEN_BONUS_POINTS) * GOLDEN_TOKEN_MULTIPLIER)
+      : basePoints;
+
+    const { state, earnedPoints } = addScore(this.scoreState, awardedBasePoints, now);
+    this.scoreState = state;
     this.updateUI();
     this.onScoreUpdate?.(this.scoreState.score, this.scoreState.combo);
 
@@ -210,19 +215,34 @@ export class GameScene extends Phaser.Scene {
       onComplete: () => container.destroy(),
     });
 
-    const awardedBasePoints = isGolden
-      ? Math.round((basePoints + GOLDEN_TOKEN_BONUS_POINTS) * GOLDEN_TOKEN_MULTIPLIER)
-      : basePoints;
-
-    this.scoreState = addScore(this.scoreState, awardedBasePoints, now).state;
-    this.updateUI();
+    this.showScoreIndicator(container.x, container.y, earnedPoints, isGolden);
 
     if (isGolden) {
       this.showGoldenLabel(container.x, container.y);
     }
+  }
 
-    this.onScoreUpdate?.(this.scoreState.score, this.scoreState.combo);
-    this.removeToken(container);
+  private showScoreIndicator(x: number, y: number, points: number, isGolden = false): void {
+    const color = isGolden ? '#fbbf24' : this.scoreState.combo > 1 ? '#34d399' : '#ffffff';
+    const label = this.add.text(x, y - TOKEN_RADIUS - 8, `+${points}`, {
+      fontSize: isGolden ? '22px' : '18px',
+      color,
+      fontFamily: 'monospace',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5, 0.5).setDepth(10);
+
+    this.tweens.add({
+      targets: label,
+      y: y - TOKEN_RADIUS - 60,
+      alpha: { from: 1, to: 0 },
+      scaleX: { from: 1.2, to: 0.8 },
+      scaleY: { from: 1.2, to: 0.8 },
+      duration: 750,
+      ease: 'Cubic.easeOut',
+      onComplete: () => label.destroy(),
+    });
   }
 
   private removeToken(container: Phaser.GameObjects.Container): void {
